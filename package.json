@@ -1,0 +1,9 @@
+{
+  "name": "autotests",
+  "description": "A package using versioning for autotests",
+  "author": "Andrii Prykhodko",
+  "dependencies": {
+    "protractor" : "5.1.2"
+    },
+  "engine": "node >= 0.4.1"
+}
