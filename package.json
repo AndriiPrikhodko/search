@@ -3,7 +3,7 @@
   "description": "A package using versioning for autotests",
   "author": "Andrii Prykhodko",
   "dependencies": {
-    "protractor" : "5.1.2"
-    },
+    "protractor": "5.4.1"
+  },
   "engine": "node >= 0.4.1"
 }
