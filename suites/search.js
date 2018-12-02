@@ -1,5 +1,6 @@
 var search = require( '../book/page_search' );
 
+filter_year = 2015;
 search = new search();
 
 describe('QA challenge', function() {
@@ -7,9 +8,8 @@ describe('QA challenge', function() {
       browser.ignoreSynchronization = true;
 
       search.openPage();
-      search.filtering().yearAfter("2015");
+      search.filtering().yearAfter(filter_year);
       search.sorting().priceDesc();
-      search.assertAllResults([search.assertYear(2015), search.assertPriceDesc()]);
-      browser.sleep(5000);
+      search.assertAllResults([search.assertYear(filter_year), search.assertPriceDesc()]);
   });
 });

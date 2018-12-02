@@ -33,11 +33,17 @@ search.prototype.assertPriceDesc = function(){
 }
 
 search.prototype.assertAllResults = function(asserts){
-  promise = protractor.promise.when()
   return pageCalucator()
   .then(function(num_result_pages){
-    for(var i = 0; i < num_result_pages; i++)
-    promise.then(() => nextPage(element(by.css('li.active')))).then(() => applyAsserts(asserts))
+    promiseChaining(
+      R.reduce(function(acc, page){
+        acc.push(() => nextPage(element(by.css('li.active'))))
+        acc.push(() => applyAsserts(asserts))
+        return acc
+        }
+        ,[]
+      )(R.range(0,num_result_pages-1))
+  )
   })
 }
 
@@ -80,4 +86,9 @@ var nextPage = function(webElement){
   return browser.executeScript( "arguments[0].scrollIntoView()", webElement)
   .then(() => element.all(by.xpath('// li [@class = "active"] / following-sibling::li / a')).first().click())
   .then(() => browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible'))
+  .then(() => browser.sleep(3000))
 }
+
+
+var promiseChaining = promises => R.reduce((chain,promise) => chain = chain.then(promise),protractor.promise.when())
+(promises)
