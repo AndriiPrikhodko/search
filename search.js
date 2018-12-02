@@ -1,6 +1,7 @@
 var until = protractor.ExpectedConditions;
 var wait_time = 5000;
-var regexp = new RegExp(/^[0-9|.]*/)
+var regex_price = new RegExp(/^[0-9|.]*/)
+var regex_year = new RegExp(/[0-9]*$/)
 var p = [];
 
 describe('QA challenge', function() {
@@ -24,12 +25,12 @@ describe('QA challenge', function() {
     browser.wait(until.presenceOf(element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]'))), wait_time, 'Price descending option is not visible');
     element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]')).click();
     browser.wait(until.stalenessOf(element(by.css('div.loading___1v1Pd'))), wait_time, 'Sorting is not executed');
-    // element.all(by.css('a[data-qa-selector="ad"]'))
-    // .then(links => links.map(link => expect(link.getText()).toContain()));
+    element.all(by.css('ul[data-qa-selector="spec-list"]'))
+    .then(specs => specs.map(spec => spec.all(by.css('li')).first().getText().then(year => expect(regex_year.exec(year)[0]).not.toBeLessThan(2015))) );
 
     element.all(by.css('div[data-qa-selector="price"]'))
     .then(prices => prices.map(function(price, i){
-      price.getText().then(price => p.push((regexp.exec(price)[0])))
+      price.getText().then(price => p.push((regex_price.exec(price)[0])))
       .then(function(){if(i > 0) expect(p[i-1]).not.toBeLessThan(p[i])})
     }
   ));
