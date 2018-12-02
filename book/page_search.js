@@ -1,5 +1,9 @@
 var until = protractor.ExpectedConditions;
-var wait_time = 5000;
+var regex_list = require('../helpers/regex_list');
+var config = require('../my_config');
+var R = require('ramda');
+
+var p = []
 
 search = function(){};
 
@@ -9,9 +13,32 @@ search.prototype.filtering = () => new filtering();
 
 search.prototype.sorting = () => new sorting();
 
+search.prototype.assertYear = function(min_year){
+  return element.all(by.css('ul[data-qa-selector="spec-list"]'))
+          .then(specs =>
+            specs.map(spec => spec.all(by.css('li')).first().getText()
+            .then(year => expect(regex_list.endsOnNumber.exec(year)[0]).not.toBeLessThan(min_year))
+            )
+          )
+}
+
+search.prototype.assertPriceDesc = function(){
+  return element.all(by.css('div[data-qa-selector="price"]'))
+    .then(prices => prices.map(function(price, i){
+      price.getText().then(price => p.push((regex_list.startsOnFloating.exec(price)[0])))
+      .then(function(){if(i > 0) expect(p[i-1]).not.toBeLessThan(p[i])})
+      .then(() => console.log(p))
+    })
+  )
+}
+
 search.prototype.assertAllResults = function(asserts){
   promise = protractor.promise.when()
-  return asserts.length > 0 ? asserts.map(function(assert){promise.then(() => assert)}) : asserts[0]
+  return pageCalucator()
+  .then(function(num_result_pages){
+    for(var i = 0; i < num_result_pages; i++)
+    promise.then(() => nextPage(element(by.css('li.active')))).then(() => applyAsserts(asserts))
+  })
 }
 
 module.exports = search;
@@ -19,21 +46,38 @@ module.exports = search;
 filtering = function(){};
 
 filtering.prototype.yearAfter = function(year){
-  return browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), wait_time, 'Filter Erstzulassung is not visible')
+  return browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible')
   .then(() => element(by.xpath('// span [contains(.,"Erstzulassung ab")]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"]'))), wait_time, 'Drop-down year selector is not visible'))
+  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"]'))), config.wait_time, 'Drop-down year selector is not visible'))
   .then(() => element(by.css('select[name="yearRange.min"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"] option[data-qa-selector-value="2015"]'))), wait_time, 'Year option is not visible'))
+  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"] option[data-qa-selector-value="2015"]'))), config.wait_time, 'Year option is not visible'))
   .then(() => element(by.css('select[name="yearRange.min"] option[data-qa-selector-value="'+ year +'"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('li[data-qa-selector-value = "'+ year +'"]'))), wait_time, 'Filter year after '+ year +' is not applied'))
+  .then(() => browser.wait(until.presenceOf(element(by.css('li[data-qa-selector-value = "'+ year +'"]'))), config.wait_time, 'Filter year after '+ year +' is not applied'))
 }
 
 sorting = function(){};
 
 sorting.prototype.priceDesc = function(){
-  return browser.wait(until.presenceOf(element(by.css('select[name="sort"]'))), wait_time, 'Sorting bar is not visible')
+  return browser.wait(until.presenceOf(element(by.css('select[name="sort"]'))), config.wait_time, 'Sorting bar is not visible')
   .then(() => element(by.css('select[name="sort"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]'))), wait_time, 'Price descending option is not visible'))
+  .then(() => browser.wait(until.presenceOf(element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]'))), config.wait_time, 'Price descending option is not visible'))
   .then(() => element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]')).click())
-  .then(() => browser.wait(until.stalenessOf(element(by.css('div.loading___1v1Pd'))), wait_time, 'Sorting is not executed'))
+  .then(() => browser.wait(until.stalenessOf(element(by.css('div.loading___1v1Pd'))), config.wait_time, 'Sorting is not executed'))
+}
+
+var pageCalucator = () =>
+  browser.wait(until.presenceOf(element(by.css('div[data-qa-selector="results-amount"]'))), config.wait_time, 'Results are not visible')
+  .then(() => element(by.css('div[data-qa-selector="results-amount"]')).getText()
+    .then(results_amount => num_result_pages = Math.ceil(regex_list.startsOnFloating.exec(results_amount)[0] / config.default_results_per_page))
+  )
+
+var applyAsserts = function(asserts){
+    promise = protractor.promise.when()
+    return asserts.length > 0 ? asserts.map(function(assert){promise.then(() => assert)}) : asserts[0]
+  }
+
+var nextPage = function(webElement){
+  return browser.executeScript( "arguments[0].scrollIntoView()", webElement)
+  .then(() => element.all(by.xpath('// li [@class = "active"] / following-sibling::li / a')).first().click())
+  .then(() => browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible'))
 }
