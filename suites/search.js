@@ -1,4 +1,4 @@
-var search = require( '../book/page_search' );
+var search = require( '../book/search_page' );
 
 filter_year = 2015;
 search = new search();
