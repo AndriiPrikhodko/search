@@ -3,10 +3,13 @@ var regex_list      = require('../helpers/regex_list');
 var promiseChaining = require('../helpers/promiseChaining').execute;
 var filtering       = require('../modules/search_page/filtering');
 var sorting         = require('../modules/search_page/sorting');
+var pagination      = require('../modules/search_page/pagination');
 var config          = require('../my_config');
 var R               = require('ramda');
 
 var p = []
+
+pagination = new pagination();
 
 search = function(){};
 
@@ -36,11 +39,11 @@ search.prototype.assertPriceDesc = function(){
 
 search.prototype.assertAllResults = function(asserts){
   var asserts = asserts;
-  return pageCalucator()
+  return pagination.pageCalucator()
   .then(function(num_result_pages){
     promiseChaining(
       R.reduce(function(acc, page){
-        acc.push(() => nextPage(element(by.css('li.active'))))
+        acc.push(() => pagination.nextPage())
         acc = [...acc, ...asserts]
         return acc
         }
@@ -51,16 +54,3 @@ search.prototype.assertAllResults = function(asserts){
 }
 
 module.exports = search;
-
-var pageCalucator = () =>
-  browser.wait(until.presenceOf(element(by.css('div[data-qa-selector="results-amount"]'))), config.wait_time, 'Results are not visible')
-  .then(() => element(by.css('div[data-qa-selector="results-amount"]')).getText()
-    .then(results_amount => num_result_pages = Math.ceil(regex_list.startsOnFloating.exec(results_amount)[0] / config.default_results_per_page))
-  )
-
-var nextPage = function(webElement){
-  return browser.executeScript( "arguments[0].scrollIntoView()", webElement)
-  .then(() => element.all(by.xpath('// li [@class = "active"] / following-sibling::li / a')).first().click())
-  .then(() => browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible'))
-  .then(() => browser.sleep(3000))
-}
