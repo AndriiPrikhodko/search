@@ -35,16 +35,17 @@ search.prototype.assertPriceDesc = function(){
 }
 
 search.prototype.assertAllResults = function(asserts){
+  var asserts = asserts;
   return pageCalucator()
   .then(function(num_result_pages){
     promiseChaining(
       R.reduce(function(acc, page){
         acc.push(() => nextPage(element(by.css('li.active'))))
-        acc.push(() => applyAsserts(asserts))
+        acc = [...acc, ...asserts]
         return acc
         }
         ,[]
-      )(R.range(0,num_result_pages-1))
+      )(R.range(1,num_result_pages))
   )
   })
 }
@@ -56,11 +57,6 @@ var pageCalucator = () =>
   .then(() => element(by.css('div[data-qa-selector="results-amount"]')).getText()
     .then(results_amount => num_result_pages = Math.ceil(regex_list.startsOnFloating.exec(results_amount)[0] / config.default_results_per_page))
   )
-
-var applyAsserts = function(asserts){
-    promise = protractor.promise.when()
-    return asserts.length > 0 ? asserts.map(function(assert){promise.then(() => assert)}) : asserts[0]
-  }
 
 var nextPage = function(webElement){
   return browser.executeScript( "arguments[0].scrollIntoView()", webElement)
