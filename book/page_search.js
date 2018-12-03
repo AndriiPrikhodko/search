@@ -1,7 +1,10 @@
-var until = protractor.ExpectedConditions;
-var regex_list = require('../helpers/regex_list');
-var config = require('../my_config');
-var R = require('ramda');
+var until           = protractor.ExpectedConditions;
+var regex_list      = require('../helpers/regex_list');
+var promiseChaining = require('../helpers/promiseChaining').execute;
+var filtering       = require('../modules/search_page/filtering');
+var sorting         = require('../modules/search_page/sorting');
+var config          = require('../my_config');
+var R               = require('ramda');
 
 var p = []
 
@@ -27,7 +30,6 @@ search.prototype.assertPriceDesc = function(){
     .then(prices => prices.map(function(price, i){
       price.getText().then(price => p.push((regex_list.startsOnFloating.exec(price)[0])))
       .then(function(){if(i > 0) expect(p[i-1]).not.toBeLessThan(p[i])})
-      .then(() => console.log(p))
     })
   )
 }
@@ -49,28 +51,6 @@ search.prototype.assertAllResults = function(asserts){
 
 module.exports = search;
 
-filtering = function(){};
-
-filtering.prototype.yearAfter = function(year){
-  return browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible')
-  .then(() => element(by.xpath('// span [contains(.,"Erstzulassung ab")]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"]'))), config.wait_time, 'Drop-down year selector is not visible'))
-  .then(() => element(by.css('select[name="yearRange.min"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('select[name="yearRange.min"] option[data-qa-selector-value="2015"]'))), config.wait_time, 'Year option is not visible'))
-  .then(() => element(by.css('select[name="yearRange.min"] option[data-qa-selector-value="'+ year +'"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('li[data-qa-selector-value = "'+ year +'"]'))), config.wait_time, 'Filter year after '+ year +' is not applied'))
-}
-
-sorting = function(){};
-
-sorting.prototype.priceDesc = function(){
-  return browser.wait(until.presenceOf(element(by.css('select[name="sort"]'))), config.wait_time, 'Sorting bar is not visible')
-  .then(() => element(by.css('select[name="sort"]')).click())
-  .then(() => browser.wait(until.presenceOf(element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]'))), config.wait_time, 'Price descending option is not visible'))
-  .then(() => element(by.css('option[data-qa-selector-value="offerPrice.amountMinorUnits.desc"]')).click())
-  .then(() => browser.wait(until.stalenessOf(element(by.css('div.loading___1v1Pd'))), config.wait_time, 'Sorting is not executed'))
-}
-
 var pageCalucator = () =>
   browser.wait(until.presenceOf(element(by.css('div[data-qa-selector="results-amount"]'))), config.wait_time, 'Results are not visible')
   .then(() => element(by.css('div[data-qa-selector="results-amount"]')).getText()
@@ -88,7 +68,3 @@ var nextPage = function(webElement){
   .then(() => browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible'))
   .then(() => browser.sleep(3000))
 }
-
-
-var promiseChaining = promises => R.reduce((chain,promise) => chain = chain.then(promise),protractor.promise.when())
-(promises)
