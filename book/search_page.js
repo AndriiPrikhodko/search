@@ -9,15 +9,17 @@ var R               = require('ramda');
 
 var p = []
 
-pagination = new pagination();
+pagination = new pagination()
+filtering = new filtering()
+sorting = new sorting()
 
 search = function(){};
 
 search.prototype.openPage = function(){return browser.get('https://www.autohero.com/de/search/')}
 
-search.prototype.filtering = () => new filtering();
+search.prototype.filtering = () => filtering;
 
-search.prototype.sorting = () => new sorting();
+search.prototype.sorting = () => sorting;
 
 search.prototype.assertYear = function(min_year){
   return element.all(by.css('ul[data-qa-selector="spec-list"]'))
