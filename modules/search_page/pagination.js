@@ -15,7 +15,7 @@ pagination.prototype.nextPage = function(){
     return browser.executeScript( "arguments[0].scrollIntoView()", currentPage)
     .then(() => element.all(by.xpath('// li [@class = "active"] / following-sibling::li / a')).first().click())
     .then(() => browser.wait(until.presenceOf(element(by.xpath('// span [contains(.,"Erstzulassung ab")]'))), config.wait_time, 'Filter Erstzulassung is not visible'))
-    .then(() => browser.sleep(3000))
+    .then(() => browser.sleep(config.page_load))
 }
 
 module.exports = pagination;
