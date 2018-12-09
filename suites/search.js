@@ -1,12 +1,12 @@
 var search = require( '../book/search_page' );
 
 filter_year = 2015;
-search = new search();
 
 describe('QA challenge', function() {
-  it('Check search results', function() {
-      browser.ignoreSynchronization = true;
-      
+  browser.ignoreSynchronization = true;
+  search = new search();
+
+  it('Check that all cars are filtered by year and sorted by price desc', function() {
       search.openPage()
       search.filtering().yearAfter(filter_year)
       search.sorting().priceDesc()

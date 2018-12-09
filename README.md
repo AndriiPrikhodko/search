@@ -2,7 +2,7 @@ Project setup steps:
 
 1. Clone repository​  
 2. Install node  
-3. Run first_run.sh required only once​  
+3. Run npm install required only once​  
 4. Run npm test​  
 ​5. You can set appropriate screen resolution in config.js file look for "--window-size"  
 
